@@ -106,7 +106,7 @@ const RepoItem = ({
                 <div className="h-12 rounded bg-ink/[0.03]" />
               </div>
             ) : fullRuns.length > 0 ? (
-              <div className="px-2 py-1 space-y-0.5">
+              <div>
                 {fullRuns.map((run) => (
                   <WorkflowRunRow
                     key={run.id}

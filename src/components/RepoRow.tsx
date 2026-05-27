@@ -68,7 +68,7 @@ export const RepoRow = memo(({ repo, latestRun, isExpanded, onToggle, isLoading,
   return (
     <div
       data-testid={`repo-row-${repo.name}`}
-      className={`rounded-lg overflow-hidden ${borderClasses}`}
+      className={`overflow-hidden ${borderClasses}`}
     >
       <span className="sr-only">{statusLabel}</span>
       <div className="flex items-center gap-0 hover:bg-surface-raised active:bg-surface-raised rounded-lg transition-colors duration-150">
@@ -172,7 +172,7 @@ export const RepoRow = memo(({ repo, latestRun, isExpanded, onToggle, isLoading,
 
             <span
               data-testid="repo-row-expand"
-              className="text-ink-muted text-xs w-4 text-center shrink-0"
+              className="text-ink-muted text-base w-5 text-center shrink-0"
             >
               {isExpanded ? '\u25BE' : '\u25B8'}
             </span>
