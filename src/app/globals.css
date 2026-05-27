@@ -1,0 +1,71 @@
+/* src/app/globals.css */
+@import "tailwindcss";
+
+@theme {
+  /* Fonts -- variables set by next/font in layout.tsx */
+  --font-sans: var(--font-geist), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Canvas & surfaces — crisp zinc/slate palette */
+  --color-canvas: #fafafa;          /* zinc-50 */
+  --color-surface: #ffffff;
+  --color-surface-raised: #f4f4f5;  /* zinc-100 */
+
+  /* Ink (text) */
+  --color-ink: #18181b;             /* zinc-900 */
+  --color-ink-secondary: #52525b;   /* zinc-600 */
+  --color-ink-muted: #a1a1aa;       /* zinc-400 */
+
+  /* Edges (borders) */
+  --color-edge: #e4e4e7;            /* zinc-200 */
+
+  /* Status palette */
+  --color-status-success: oklch(65% 0.2 145);
+  --color-status-failure: oklch(58% 0.22 25);
+  --color-status-running: oklch(62% 0.2 250);
+  --color-status-queued: oklch(72% 0.15 75);
+  --color-status-cancelled: oklch(60% 0.02 250);
+
+  /* Motion */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Elevation — zinc-tinted shadows */
+  --shadow-sm: 0 1px 2px rgba(24,24,27,0.04);
+  --shadow-md: 0 4px 12px rgba(24,24,27,0.06), 0 1px 3px rgba(24,24,27,0.04);
+  --shadow-lg: 0 8px 24px rgba(24,24,27,0.08), 0 2px 6px rgba(24,24,27,0.04);
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Disable all transitions globally */
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Disable pulse animation entirely (reverts to base state, not mid-animation) */
+  .animate-pulse,
+  .animate-fade-in-up {
+    animation: none !important;
+  }
+}

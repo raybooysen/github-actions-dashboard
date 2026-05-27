@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    # Next.js inlines NEXT_PUBLIC_* vars at build time. E2E tests don't go
+    # through real OAuth, but useAuth's missing-client-id guard would throw
+    # on the connect click without a non-empty value at build time.
+    env:
+      NEXT_PUBLIC_GITHUB_CLIENT_ID: e2e-test-client-id
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - run: npx vitest run
+
+      - run: npm run build
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npx playwright test
