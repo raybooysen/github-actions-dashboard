@@ -174,15 +174,16 @@ describe('DashboardShell integration', () => {
     expect(rows[2]).toHaveAttribute('data-testid', 'repo-row-docs-site');
   });
 
-  it('shows repo count and status summary in header', async () => {
+  it('embeds total repo count in the search placeholder and per-status counts in the filter pills', async () => {
     renderWithProviders(<DashboardShell />);
 
     await waitFor(() => {
       expect(screen.getByTestId('repo-row-api-server')).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/3 repositories/)).toBeInTheDocument();
-    expect(screen.getByText(/1 failing/)).toBeInTheDocument();
-    expect(screen.getByText(/1 running/)).toBeInTheDocument();
+    expect(screen.getByTestId('filter-search')).toHaveAttribute('placeholder', 'Search 3 repositories...');
+    expect(screen.getByTestId('filter-pill-all-count')).toHaveTextContent('3');
+    expect(screen.getByTestId('filter-pill-failed-count')).toHaveTextContent('1');
+    expect(screen.getByTestId('filter-pill-running-count')).toHaveTextContent('1');
   });
 });

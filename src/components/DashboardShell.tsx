@@ -12,8 +12,7 @@ import { usePinnedRepos } from '@/hooks/usePinnedRepos';
 import { isQueuedStatus } from '@/lib/status-utils';
 import { fetchLatestRun, fetchWorkflowRuns } from '@/lib/github-client';
 import { computeRefetchInterval } from '@/lib/polling';
-import { SummaryBar } from './SummaryBar';
-import { FilterBar } from './FilterBar';
+import { FilterBar, type StatusCounts } from './FilterBar';
 import { RepoRow } from './RepoRow';
 import { WorkflowRunRow } from './WorkflowRunRow';
 import type {
@@ -253,9 +252,26 @@ const DashboardShell = () => {
     });
   }, []);
 
-  const repoCount = filteredAndSorted.length;
-  const runningCount = allLatestRuns.filter((r) => r.status === 'in_progress').length;
-  const failedCount = allLatestRuns.filter((r) => r.conclusion === 'failure').length;
+  const statusCounts = useMemo<StatusCounts>(() => {
+    let running = 0;
+    let queued = 0;
+    let passed = 0;
+    let failed = 0;
+    for (const run of allLatestRuns) {
+      if (run.status === 'in_progress') {
+        running++;
+      } else if (isQueuedStatus(run.status)) {
+        queued++;
+      } else if (run.conclusion === 'success') {
+        passed++;
+      } else if (run.conclusion === 'failure') {
+        failed++;
+      }
+    }
+    return { running, queued, passed, failed };
+  }, [allLatestRuns]);
+
+  const totalRepos = allLatestRuns.length;
   const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all';
 
   // Show skeletons until repos AND their latest-run queries have settled.
@@ -310,19 +326,11 @@ const DashboardShell = () => {
         </nav>
       </header>
       <main id="main-content" className="max-w-5xl mx-auto px-3 sm:px-4 py-6 space-y-5 overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <SummaryBar runs={allLatestRuns} />
-          {!isLoading && (
-            <span className="text-xs text-ink-muted">
-              {repoCount} repositories
-              {failedCount > 0 && <span className="text-status-failure"> · {failedCount} failing</span>}
-              {runningCount > 0 && <span className="text-status-running"> · {runningCount} running</span>}
-            </span>
-          )}
-        </div>
         <FilterBar
           searchQuery={searchQuery}
           statusFilter={statusFilter}
+          totalRepos={totalRepos}
+          counts={statusCounts}
           onSearchChange={setSearchQuery}
           onStatusChange={setStatusFilter}
         />
