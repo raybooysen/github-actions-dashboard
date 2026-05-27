@@ -19,6 +19,7 @@ export const mockRepos: GitHubRepo[] = [
     full_name: 'testuser/api-server',
     owner: { login: 'testuser' },
     private: false,
+    archived: false,
     pushed_at: '2026-04-18T10:00:00Z',
     html_url: 'https://github.com/testuser/api-server',
   },
@@ -28,10 +29,22 @@ export const mockRepos: GitHubRepo[] = [
     full_name: 'testuser/web-app',
     owner: { login: 'testuser' },
     private: true,
+    archived: false,
     pushed_at: '2026-04-18T09:00:00Z',
     html_url: 'https://github.com/testuser/web-app',
   },
 ];
+
+export const mockArchivedRepo: GitHubRepo = {
+  id: 9,
+  name: 'legacy-tool',
+  full_name: 'testuser/legacy-tool',
+  owner: { login: 'testuser' },
+  private: false,
+  archived: true,
+  pushed_at: '2024-01-10T08:00:00Z',
+  html_url: 'https://github.com/testuser/legacy-tool',
+};
 
 export const mockRunning: GitHubWorkflowRun = {
   id: 100,
