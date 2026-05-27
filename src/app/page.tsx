@@ -190,7 +190,7 @@ const LandingPageContent = () => {
               <button
                 data-testid="landing-connect-button"
                 onClick={login}
-                className="inline-flex items-center gap-2.5 rounded-xl bg-ink text-white px-7 py-3.5 text-base font-semibold shadow-sm transition-all duration-150 hover:shadow-md active:scale-[0.98] active:-translate-y-[1px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+                className="inline-flex items-center gap-2.5 rounded-xl bg-ink text-white px-7 py-3.5 text-base font-semibold shadow-sm transition-all duration-150 cursor-pointer hover:shadow-md active:scale-[0.98] active:-translate-y-[1px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
               >
                 <GitHubIcon className="h-5 w-5" />
                 Connect with GitHub
