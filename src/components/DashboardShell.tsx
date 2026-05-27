@@ -339,25 +339,29 @@ const DashboardShell = () => {
             </span>
           )}
         </div>
-        <FilterBar
-          searchQuery={searchQuery}
-          statusFilter={statusFilter}
-          onSearchChange={setSearchQuery}
-          onStatusChange={setStatusFilter}
-        />
-        <h2 className="sr-only">Repositories</h2>
-        {!isLoading && filteredAndSorted.length > 0 && (
-          <div className="flex justify-end">
-            <button
-              data-testid="toggle-expand-all"
-              onClick={toggleAll}
-              type="button"
-              className="text-xs text-ink-secondary hover:text-ink transition-colors duration-fast focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-status-running rounded"
-            >
-              {someCollapsed ? 'Expand all' : 'Collapse all'}
-            </button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1 min-w-0">
+            <FilterBar
+              searchQuery={searchQuery}
+              statusFilter={statusFilter}
+              onSearchChange={setSearchQuery}
+              onStatusChange={setStatusFilter}
+            />
           </div>
-        )}
+          {!isLoading && filteredAndSorted.length > 0 && (
+            <div className="rounded-xl bg-surface border border-edge p-1 flex">
+              <button
+                data-testid="toggle-expand-all"
+                onClick={toggleAll}
+                type="button"
+                className="rounded-lg px-2.5 sm:px-3 py-1 sm:py-1.5 text-sm font-medium text-ink hover:bg-surface-raised active:bg-surface-raised transition-all duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-status-running"
+              >
+                {someCollapsed ? 'Expand all' : 'Collapse all'}
+              </button>
+            </div>
+          )}
+        </div>
+        <h2 className="sr-only">Repositories</h2>
         <div
           data-testid="repo-grid"
           aria-busy={isLoading}
