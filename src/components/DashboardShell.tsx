@@ -253,6 +253,25 @@ const DashboardShell = () => {
     });
   }, []);
 
+  // "Expand all" if any currently-visible repo is collapsed; "Collapse all"
+  // when every visible repo is already expanded. Operates on filteredAndSorted
+  // so it only affects what the user can see.
+  const someCollapsed = useMemo(
+    () => filteredAndSorted.some((repo) => !expandedRepos.has(repo.full_name)),
+    [filteredAndSorted, expandedRepos],
+  );
+
+  const toggleAll = useCallback(() => {
+    const target = someCollapsed; // expanding (true) when something is collapsed
+    setUserToggles((prev) => {
+      const next = new Map(prev);
+      for (const repo of filteredAndSorted) {
+        next.set(repo.full_name, target);
+      }
+      return next;
+    });
+  }, [filteredAndSorted, someCollapsed]);
+
   const repoCount = filteredAndSorted.length;
   const runningCount = allLatestRuns.filter((r) => r.status === 'in_progress').length;
   const failedCount = allLatestRuns.filter((r) => r.conclusion === 'failure').length;
@@ -327,6 +346,18 @@ const DashboardShell = () => {
           onStatusChange={setStatusFilter}
         />
         <h2 className="sr-only">Repositories</h2>
+        {!isLoading && filteredAndSorted.length > 0 && (
+          <div className="flex justify-end -mb-2">
+            <button
+              data-testid="toggle-expand-all"
+              onClick={toggleAll}
+              type="button"
+              className="text-xs text-ink-secondary hover:text-ink transition-colors duration-fast focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-status-running rounded"
+            >
+              {someCollapsed ? 'Expand all' : 'Collapse all'}
+            </button>
+          </div>
+        )}
         <div
           data-testid="repo-grid"
           aria-busy={isLoading}
