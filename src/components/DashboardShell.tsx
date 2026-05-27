@@ -139,8 +139,14 @@ const DashboardShell = () => {
   const { rateLimitMultiplier } = useRateLimit();
   const { isPinned, togglePin } = usePinnedRepos();
 
+  // Archived repos are hidden from the dashboard entirely — they don't produce
+  // workflow runs and would otherwise burn API quota on the per-repo polling.
+  // The count is surfaced at the bottom of the list so it's not silently dropped.
+  const visibleRepos = useMemo(() => (repos ?? []).filter((repo) => !repo.archived), [repos]);
+  const archivedCount = useMemo(() => (repos ?? []).filter((repo) => repo.archived).length, [repos]);
+
   const latestRunQueries = useQueries({
-    queries: (repos ?? []).map((repo) => ({
+    queries: visibleRepos.map((repo) => ({
       queryKey: ['latestRun', repo.owner.login, repo.name] as const,
       queryFn: () => fetchLatestRun(token!, repo.owner.login, repo.name),
       enabled: !!token,
@@ -150,22 +156,22 @@ const DashboardShell = () => {
 
   const latestRunByRepo = useMemo(() => {
     const map = new Map<string, GitHubWorkflowRun | null>();
-    (repos ?? []).forEach((repo, i) => {
+    visibleRepos.forEach((repo, i) => {
       const data = latestRunQueries[i]?.data;
       const run = data?.workflow_runs?.[0] ?? null;
       map.set(repo.full_name, run);
     });
     return map;
-  }, [repos, latestRunQueries]);
+  }, [visibleRepos, latestRunQueries]);
 
   const noActionsCount = useMemo(() => {
     let count = 0;
-    (repos ?? []).forEach((repo, i) => {
+    visibleRepos.forEach((repo, i) => {
       const data = latestRunQueries[i]?.data;
       if (data && data.total_count === 0) count++;
     });
     return count;
-  }, [repos, latestRunQueries]);
+  }, [visibleRepos, latestRunQueries]);
 
   const allLatestRuns = useMemo<GitHubWorkflowRun[]>(() => {
     const runs: GitHubWorkflowRun[] = [];
@@ -178,7 +184,7 @@ const DashboardShell = () => {
   const filteredAndSorted = useMemo(() => {
     if (!repos) return [];
 
-    const filtered = repos.filter((repo) => {
+    const filtered = visibleRepos.filter((repo) => {
       const latestRun = latestRunByRepo.get(repo.full_name);
 
       if (!latestRun) return false;
@@ -218,7 +224,7 @@ const DashboardShell = () => {
       const bTime = bRun?.created_at ?? b.pushed_at;
       return new Date(bTime).getTime() - new Date(aTime).getTime();
     });
-  }, [repos, searchQuery, statusFilter, latestRunByRepo, isPinned]);
+  }, [repos, visibleRepos, searchQuery, statusFilter, latestRunByRepo, isPinned]);
 
   // Derive expanded repos: failed repos auto-expand, user toggles override
   const expandedRepos = useMemo(() => {
@@ -260,7 +266,7 @@ const DashboardShell = () => {
 
   // Show skeletons until repos AND their latest-run queries have settled.
   // This prevents a flash of "No repositories" while runs are still loading.
-  const latestRunsStillLoading = repos && repos.length > 0 && latestRunQueries.some((q) => q.isLoading);
+  const latestRunsStillLoading = visibleRepos.length > 0 && latestRunQueries.some((q) => q.isLoading);
   const isLoading = reposLoading || latestRunsStillLoading;
 
   return (
@@ -336,7 +342,7 @@ const DashboardShell = () => {
             Array.from({ length: 6 }).map((_, i) => (
               <div key={`skeleton-${i}`} className="rounded-xl border border-edge bg-surface p-1 shadow-sm">
                 <RepoRow
-                  repo={{ id: 0, name: '', full_name: '', owner: { login: '' }, private: false, pushed_at: '', html_url: '' }}
+                  repo={{ id: 0, name: '', full_name: '', owner: { login: '' }, private: false, archived: false, pushed_at: '', html_url: '' }}
                   latestRun={null}
                   isExpanded={false}
                   onToggle={() => {}}
@@ -377,6 +383,14 @@ const DashboardShell = () => {
           )}
         </div>
 
+        {archivedCount > 0 && (
+          <p
+            data-testid="archived-hidden-count"
+            className="text-center text-xs text-ink-muted pt-4"
+          >
+            {archivedCount} archived {archivedCount === 1 ? 'repository' : 'repositories'} hidden
+          </p>
+        )}
         {noActionsCount > 0 && (
           <p className="text-center text-xs text-ink-muted py-4">
             {noActionsCount} {noActionsCount === 1 ? 'repository' : 'repositories'} with no GitHub Actions hidden

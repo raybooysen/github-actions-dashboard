@@ -49,17 +49,17 @@ vi.stubGlobal('IntersectionObserver', MockIntersectionObserver);
 const testRepos: GitHubRepo[] = [
   {
     id: 1, name: 'api-server', full_name: 'testuser/api-server',
-    owner: { login: 'testuser' }, private: false,
+    owner: { login: 'testuser' }, private: false, archived: false,
     pushed_at: '2026-04-18T08:00:00Z', html_url: 'https://github.com/testuser/api-server',
   },
   {
     id: 2, name: 'web-app', full_name: 'testuser/web-app',
-    owner: { login: 'testuser' }, private: true,
+    owner: { login: 'testuser' }, private: true, archived: false,
     pushed_at: '2026-04-18T09:00:00Z', html_url: 'https://github.com/testuser/web-app',
   },
   {
     id: 3, name: 'docs-site', full_name: 'testuser/docs-site',
-    owner: { login: 'testuser' }, private: false,
+    owner: { login: 'testuser' }, private: false, archived: false,
     pushed_at: '2026-04-18T10:00:00Z', html_url: 'https://github.com/testuser/docs-site',
   },
 ];
@@ -184,5 +184,56 @@ describe('DashboardShell integration', () => {
     expect(screen.getByText(/3 repositories/)).toBeInTheDocument();
     expect(screen.getByText(/1 failing/)).toBeInTheDocument();
     expect(screen.getByText(/1 running/)).toBeInTheDocument();
+  });
+
+  it('hides archived repos from the list and shows them as a count footer', async () => {
+    const archivedLegacy: GitHubRepo = {
+      id: 99, name: 'legacy-tool', full_name: 'testuser/legacy-tool',
+      owner: { login: 'testuser' }, private: false, archived: true,
+      pushed_at: '2024-01-01T00:00:00Z', html_url: 'https://github.com/testuser/legacy-tool',
+    };
+    const archivedRetired: GitHubRepo = {
+      id: 100, name: 'retired-service', full_name: 'testuser/retired-service',
+      owner: { login: 'testuser' }, private: true, archived: true,
+      pushed_at: '2024-02-01T00:00:00Z', html_url: 'https://github.com/testuser/retired-service',
+    };
+    server.use(
+      http.get('https://api.github.com/user/repos', () => {
+        return HttpResponse.json([...testRepos, archivedLegacy, archivedRetired]);
+      }),
+    );
+
+    renderWithProviders(<DashboardShell />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('repo-row-api-server')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByTestId('repo-row-legacy-tool')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('repo-row-retired-service')).not.toBeInTheDocument();
+
+    const archivedFooter = screen.getByTestId('archived-hidden-count');
+    expect(archivedFooter).toHaveTextContent('2 archived repositories hidden');
+  });
+
+  it('uses the singular form when exactly one archived repo is hidden', async () => {
+    const archived: GitHubRepo = {
+      id: 99, name: 'legacy-tool', full_name: 'testuser/legacy-tool',
+      owner: { login: 'testuser' }, private: false, archived: true,
+      pushed_at: '2024-01-01T00:00:00Z', html_url: 'https://github.com/testuser/legacy-tool',
+    };
+    server.use(
+      http.get('https://api.github.com/user/repos', () => {
+        return HttpResponse.json([...testRepos, archived]);
+      }),
+    );
+
+    renderWithProviders(<DashboardShell />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('repo-row-api-server')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('archived-hidden-count')).toHaveTextContent('1 archived repository hidden');
   });
 });
