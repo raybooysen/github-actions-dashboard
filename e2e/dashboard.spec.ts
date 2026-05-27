@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { seedAuth, mockGitHubApi } from './helpers';
+import { seedAuth, mockGitHubApi, MOCK_REPOS } from './helpers';
 
 test.describe('Dashboard with Data', () => {
   test.beforeEach(async ({ page }) => {
@@ -7,26 +7,26 @@ test.describe('Dashboard with Data', () => {
     await mockGitHubApi(page);
   });
 
-  test('renders summary bar with correct counts', async ({ page }) => {
+  test('renders filter pills with correct per-status counts', async ({ page }) => {
     await page.goto('/dashboard');
 
     await expect(page.getByTestId('dashboard-shell')).toBeVisible();
 
-    const summaryBar = page.getByTestId('summary-bar');
-    await expect(summaryBar).toBeVisible();
+    const repoGrid = page.getByTestId('repo-grid');
+    await expect(repoGrid).toHaveAttribute('aria-busy', 'false');
 
     // With per_page=1 (latest run per repo):
     // api-server latest = MOCK_RUNNING_RUN (in_progress)
     // web-app latest = MOCK_FAILED_RUN (failure)
-    const runningItem = page.getByTestId('summary-running');
-    await expect(runningItem).toContainText('1');
-    await expect(runningItem).toContainText('Running');
+    await expect(page.getByTestId('filter-pill-all-count')).toHaveText('2');
+    await expect(page.getByTestId('filter-pill-running-count')).toHaveText('1');
+    await expect(page.getByTestId('filter-pill-queued-count')).toHaveText('0');
+    await expect(page.getByTestId('filter-pill-failed-count')).toHaveText('1');
 
-    const queuedItem = page.getByTestId('summary-queued');
-    await expect(queuedItem).toContainText('0');
-
-    const failedItem = page.getByTestId('summary-failed');
-    await expect(failedItem).toContainText('1');
+    await expect(page.getByTestId('filter-search')).toHaveAttribute(
+      'placeholder',
+      'Search 2 repositories...',
+    );
   });
 
   test('renders collapsed repo rows', async ({ page }) => {
@@ -245,5 +245,44 @@ test.describe('Dashboard Filtering', () => {
     // web-app latest run is failed (not running), so nothing matches
     const emptyState = page.getByTestId('empty-state');
     await expect(emptyState).toBeVisible();
+  });
+});
+
+test.describe('Archived repositories', () => {
+  test('hides archived repos from the list and surfaces them as a hidden count', async ({ page }) => {
+    await seedAuth(page);
+    await mockGitHubApi(page);
+
+    // Override /user/repos AFTER mockGitHubApi so this handler wins, returning
+    // the standard active repos plus an extra archived repo that should never render.
+    await page.route('https://api.github.com/user/repos*', (route) => {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          ...MOCK_REPOS,
+          {
+            id: 99,
+            name: 'legacy-tool',
+            full_name: 'testuser/legacy-tool',
+            owner: { login: 'testuser' },
+            private: false,
+            archived: true,
+            pushed_at: '2024-01-01T00:00:00Z',
+            html_url: 'https://github.com/testuser/legacy-tool',
+          },
+        ]),
+      });
+    });
+
+    await page.goto('/dashboard');
+
+    const repoGrid = page.getByTestId('repo-grid');
+    await expect(repoGrid).toHaveAttribute('aria-busy', 'false');
+
+    await expect(page.getByTestId('repo-row-api-server')).toBeVisible();
+    await expect(page.getByTestId('repo-row-legacy-tool')).toHaveCount(0);
+
+    await expect(page.getByTestId('archived-hidden-count')).toHaveText('1 archived repository hidden');
   });
 });

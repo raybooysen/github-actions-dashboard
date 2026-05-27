@@ -12,6 +12,7 @@ export type GitHubRepo = {
   full_name: string;
   owner: { login: string };
   private: boolean;
+  archived: boolean;
   pushed_at: string;
   html_url: string;
 }

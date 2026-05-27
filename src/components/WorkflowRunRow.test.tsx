@@ -28,6 +28,23 @@ describe('WorkflowRunRow', () => {
     expect(screen.getByTestId('workflow-run-name')).toHaveTextContent('Deploy');
   });
 
+  it('gives the desktop workflow name link the CSS classes it needs to truncate long names', () => {
+    // jsdom has no layout engine, so we assert the CSS contract: the parent
+    // anchor must have `truncate` (overflow/ellipsis rules) AND `min-w-0`
+    // (so the flex item can shrink below its intrinsic content width). The
+    // matching grid-cols-1 fix on DashboardShell's repo-grid is what actually
+    // bounds the row width — see DashboardShell.test.tsx for that half.
+    const longRun: GitHubWorkflowRun = {
+      ...mockPassed,
+      name: 'A very very very long workflow name that would otherwise blow out the desktop row width',
+    };
+    renderWithProviders(<WorkflowRunRow run={longRun} {...defaultProps} />);
+    const nameLink = screen.getByTestId('workflow-run-name').closest('a');
+    expect(nameLink).not.toBeNull();
+    expect(nameLink).toHaveClass('truncate');
+    expect(nameLink).toHaveClass('min-w-0');
+  });
+
   it('renders the branch name', () => {
     renderWithProviders(<WorkflowRunRow run={mockPassed} {...defaultProps} />);
     expect(screen.getByTestId('workflow-run-branch')).toHaveTextContent('main');

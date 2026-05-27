@@ -219,10 +219,16 @@ export const WorkflowRunRow = memo(({ run, owner, repo }: WorkflowRunRowProps) =
               {statusLabel}
             </span>
 
-            {/* Workflow name -> links to run on GitHub */}
+            {/* Workflow name -> links to run on GitHub.
+                `min-w-0` lets the flex item shrink below its intrinsic
+                content width so `truncate` actually engages. The matching
+                fix for the parent CSS Grid (grid-cols-1 in DashboardShell)
+                is what bounds the row width in the first place — without
+                that, the grid track would auto-grow to fit the longest
+                workflow name, defeating any flex-level shrinking here. */}
             <GhLink
               href={run.html_url}
-              className="text-sm font-semibold text-ink truncate"
+              className="text-sm font-semibold text-ink truncate min-w-0"
               title="View run on GitHub"
             >
               <span data-testid="workflow-run-name">{run.name}</span>
