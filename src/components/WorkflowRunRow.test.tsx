@@ -28,12 +28,12 @@ describe('WorkflowRunRow', () => {
     expect(screen.getByTestId('workflow-run-name')).toHaveTextContent('Deploy');
   });
 
-  it('constrains the desktop workflow name so long names truncate instead of overflowing the row', () => {
-    // jsdom has no layout engine, so we assert the CSS contract that lets the
-    // browser perform the truncation: the parent anchor must have `truncate`
-    // (the overflow/ellipsis rules), `min-w-0` (so it can shrink below
-    // intrinsic content width), AND a `max-w-[50%]` cap (the safety net that
-    // matches the working pattern used by the bottom-line commit message).
+  it('makes the desktop workflow name the flex-grow element so it absorbs leftover space and truncates instead of overflowing', () => {
+    // jsdom has no layout engine, so we assert the CSS contract: the parent
+    // anchor must have `truncate` (overflow/ellipsis rules), `min-w-0` (so
+    // it can shrink below intrinsic content width), AND `flex-1` (so it
+    // claims whatever space the fixed-width sibling items don't, with no
+    // separate spacer competing for that space).
     const longRun: GitHubWorkflowRun = {
       ...mockPassed,
       name: 'A very very very long workflow name that would otherwise blow out the desktop row width',
@@ -43,7 +43,7 @@ describe('WorkflowRunRow', () => {
     expect(nameLink).not.toBeNull();
     expect(nameLink).toHaveClass('truncate');
     expect(nameLink).toHaveClass('min-w-0');
-    expect(nameLink).toHaveClass('max-w-[50%]');
+    expect(nameLink).toHaveClass('flex-1');
   });
 
   it('renders the branch name', () => {

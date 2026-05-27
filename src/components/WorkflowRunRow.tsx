@@ -220,15 +220,15 @@ export const WorkflowRunRow = memo(({ run, owner, repo }: WorkflowRunRowProps) =
             </span>
 
             {/* Workflow name -> links to run on GitHub.
-                Hard-cap with max-w-[50%] (matching the commit message on the
-                bottom line) so a long run name truncates instead of pushing
-                the trailing duration/time/chevron off the right edge.
-                `min-w-0` alone wasn't enough in practice — competing items in
-                the flex row and the trailing flex-1 spacer left the link able
-                to grow past the visible area. */}
+                Acts as the flex-1 element on this row so it absorbs whatever
+                horizontal space the fixed-width items don't claim, and
+                `truncate min-w-0` makes it ellipsis when its content
+                exceeds that space. The trailing spacer that used to push the
+                right cluster to the edge is gone — with the name now
+                flex-growing, every item fits without overflowing the row. */}
             <GhLink
               href={run.html_url}
-              className="text-sm font-semibold text-ink truncate min-w-0 max-w-[50%]"
+              className="text-sm font-semibold text-ink truncate flex-1 min-w-0"
               title="View run on GitHub"
             >
               <span data-testid="workflow-run-name">{run.name}</span>
@@ -247,8 +247,6 @@ export const WorkflowRunRow = memo(({ run, owner, repo }: WorkflowRunRowProps) =
 
             {/* Event badge -- PR badge links to PR, others link to run */}
             {eventBadge}
-
-            <span className="flex-1" />
 
             {/* Actor avatar -> links to GitHub profile */}
             {run.triggering_actor && actorUrl && (
