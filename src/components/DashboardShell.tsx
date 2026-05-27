@@ -258,6 +258,25 @@ const DashboardShell = () => {
     });
   }, []);
 
+  // "Expand all" if any currently-visible repo is collapsed; "Collapse all"
+  // when every visible repo is already expanded. Operates on filteredAndSorted
+  // so it only affects what the user can see.
+  const someCollapsed = useMemo(
+    () => filteredAndSorted.some((repo) => !expandedRepos.has(repo.full_name)),
+    [filteredAndSorted, expandedRepos],
+  );
+
+  const toggleAll = useCallback(() => {
+    const target = someCollapsed; // expanding (true) when something is collapsed
+    setUserToggles((prev) => {
+      const next = new Map(prev);
+      for (const repo of filteredAndSorted) {
+        next.set(repo.full_name, target);
+      }
+      return next;
+    });
+  }, [filteredAndSorted, someCollapsed]);
+
   const statusCounts = useMemo<StatusCounts>(() => {
     let running = 0;
     let queued = 0;
@@ -332,14 +351,30 @@ const DashboardShell = () => {
         </nav>
       </header>
       <main id="main-content" className="max-w-5xl mx-auto px-3 sm:px-4 py-6 space-y-5 overflow-hidden">
-        <FilterBar
-          searchQuery={searchQuery}
-          statusFilter={statusFilter}
-          totalRepos={totalRepos}
-          counts={statusCounts}
-          onSearchChange={setSearchQuery}
-          onStatusChange={setStatusFilter}
-        />
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1 min-w-0">
+            <FilterBar
+              searchQuery={searchQuery}
+              statusFilter={statusFilter}
+              totalRepos={totalRepos}
+              counts={statusCounts}
+              onSearchChange={setSearchQuery}
+              onStatusChange={setStatusFilter}
+            />
+          </div>
+          {!isLoading && filteredAndSorted.length > 0 && (
+            <div className="rounded-xl bg-surface border border-edge p-1 flex">
+              <button
+                data-testid="toggle-expand-all"
+                onClick={toggleAll}
+                type="button"
+                className="rounded-lg px-2.5 sm:px-3 py-1 sm:py-1.5 text-sm font-medium text-ink hover:bg-surface-raised active:bg-surface-raised transition-all duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-status-running"
+              >
+                {someCollapsed ? 'Expand all' : 'Collapse all'}
+              </button>
+            </div>
+          )}
+        </div>
         <h2 className="sr-only">Repositories</h2>
         <div
           data-testid="repo-grid"

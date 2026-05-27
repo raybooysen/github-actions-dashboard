@@ -237,4 +237,111 @@ describe('DashboardShell integration', () => {
 
     expect(screen.getByTestId('archived-hidden-count')).toHaveTextContent('1 archived repository hidden');
   });
+
+  describe('expand/collapse all toggle', () => {
+    it('starts labelled "Expand all" when at least one visible repo is collapsed', async () => {
+      renderWithProviders(<DashboardShell />);
+
+      // api-server (failed) auto-expands; web-app + docs-site stay collapsed.
+      await waitFor(() => {
+        expect(screen.getByTestId('repo-row-api-server')).toBeInTheDocument();
+      });
+
+      const toggle = screen.getByTestId('toggle-expand-all');
+      expect(toggle).toHaveTextContent('Expand all');
+    });
+
+    it('expands every visible repo when "Expand all" is clicked and flips its own label', async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<DashboardShell />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('repo-row-api-server')).toBeInTheDocument();
+        expect(screen.getByTestId('repo-row-web-app')).toBeInTheDocument();
+        expect(screen.getByTestId('repo-row-docs-site')).toBeInTheDocument();
+      });
+
+      const toggle = screen.getByTestId('toggle-expand-all');
+      await user.click(toggle);
+
+      // Every repo now has its expanded-content section rendered.
+      expect(document.getElementById('repo-expanded-testuser/api-server')).toBeInTheDocument();
+      expect(document.getElementById('repo-expanded-testuser/web-app')).toBeInTheDocument();
+      expect(document.getElementById('repo-expanded-testuser/docs-site')).toBeInTheDocument();
+
+      expect(toggle).toHaveTextContent('Collapse all');
+    });
+
+    it('collapses every visible repo when "Collapse all" is clicked, overriding the failed auto-expand', async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<DashboardShell />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('repo-row-api-server')).toBeInTheDocument();
+      });
+
+      const toggle = screen.getByTestId('toggle-expand-all');
+      // First expand everything so we have "Collapse all" available.
+      await user.click(toggle);
+      expect(toggle).toHaveTextContent('Collapse all');
+
+      await user.click(toggle);
+
+      expect(document.getElementById('repo-expanded-testuser/api-server')).not.toBeInTheDocument();
+      expect(document.getElementById('repo-expanded-testuser/web-app')).not.toBeInTheDocument();
+      expect(document.getElementById('repo-expanded-testuser/docs-site')).not.toBeInTheDocument();
+
+      expect(toggle).toHaveTextContent('Expand all');
+    });
+
+    it('only affects currently-visible repos: collapsing while filtered leaves out-of-view repos in their auto-expand state', async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<DashboardShell />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('repo-row-api-server')).toBeInTheDocument();
+      });
+
+      // Filter down to "failed" — only api-server is visible.
+      await user.click(screen.getByTestId('filter-pill-failed'));
+
+      // Toggle now operates on the single visible repo. It's currently expanded
+      // (failed auto-expand), so the label reads "Collapse all".
+      const toggle = screen.getByTestId('toggle-expand-all');
+      expect(toggle).toHaveTextContent('Collapse all');
+
+      await user.click(toggle);
+      expect(document.getElementById('repo-expanded-testuser/api-server')).not.toBeInTheDocument();
+
+      // Switch back to All. The other two repos were never touched by the toggle
+      // and should appear in their default state (collapsed, since they're not failed).
+      await user.click(screen.getByTestId('filter-pill-all'));
+      await waitFor(() => {
+        expect(screen.getByTestId('repo-row-web-app')).toBeInTheDocument();
+      });
+
+      expect(document.getElementById('repo-expanded-testuser/web-app')).not.toBeInTheDocument();
+      expect(document.getElementById('repo-expanded-testuser/docs-site')).not.toBeInTheDocument();
+      // api-server stays collapsed because the user explicitly collapsed it.
+      expect(document.getElementById('repo-expanded-testuser/api-server')).not.toBeInTheDocument();
+    });
+
+    it('hides the toggle when no repos are visible', async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<DashboardShell />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('repo-row-api-server')).toBeInTheDocument();
+      });
+
+      // Search for something nothing matches.
+      const searchInput = screen.getByRole('searchbox');
+      await user.type(searchInput, 'definitely-no-match-xyz');
+
+      await waitFor(() => {
+        expect(screen.getByTestId('empty-state')).toBeInTheDocument();
+      });
+      expect(screen.queryByTestId('toggle-expand-all')).not.toBeInTheDocument();
+    });
+  });
 });
