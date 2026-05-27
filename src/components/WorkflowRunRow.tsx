@@ -220,15 +220,15 @@ export const WorkflowRunRow = memo(({ run, owner, repo }: WorkflowRunRowProps) =
             </span>
 
             {/* Workflow name -> links to run on GitHub.
-                Acts as the flex-1 element on this row so it absorbs whatever
-                horizontal space the fixed-width items don't claim, and
-                `truncate min-w-0` makes it ellipsis when its content
-                exceeds that space. The trailing spacer that used to push the
-                right cluster to the edge is gone — with the name now
-                flex-growing, every item fits without overflowing the row. */}
+                `min-w-0` lets the flex item shrink below its intrinsic
+                content width so `truncate` actually engages. The matching
+                fix for the parent CSS Grid (grid-cols-1 in DashboardShell)
+                is what bounds the row width in the first place — without
+                that, the grid track would auto-grow to fit the longest
+                workflow name, defeating any flex-level shrinking here. */}
             <GhLink
               href={run.html_url}
-              className="text-sm font-semibold text-ink truncate flex-1 min-w-0"
+              className="text-sm font-semibold text-ink truncate min-w-0"
               title="View run on GitHub"
             >
               <span data-testid="workflow-run-name">{run.name}</span>
@@ -247,6 +247,8 @@ export const WorkflowRunRow = memo(({ run, owner, repo }: WorkflowRunRowProps) =
 
             {/* Event badge -- PR badge links to PR, others link to run */}
             {eventBadge}
+
+            <span className="flex-1" />
 
             {/* Actor avatar -> links to GitHub profile */}
             {run.triggering_actor && actorUrl && (
