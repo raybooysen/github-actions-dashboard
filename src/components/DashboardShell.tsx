@@ -1,6 +1,7 @@
 'use client';
 
 import Image from "next/image";
+import Link from "next/link";
 import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useQuery, useQueries } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
@@ -322,12 +323,18 @@ const DashboardShell = () => {
           data-testid="dashboard-nav"
           className="max-w-5xl mx-auto flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3"
         >
-          <h1
-            data-testid="dashboard-title"
-            className="text-lg font-bold tracking-tight text-ink"
+          <Link
+            href="/dashboard"
+            data-testid="dashboard-title-link"
+            className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
-            Actions Dashboard
-          </h1>
+            <h1
+              data-testid="dashboard-title"
+              className="text-lg font-bold tracking-tight text-ink"
+            >
+              Actions Dashboard
+            </h1>
+          </Link>
           <div className="flex items-center gap-3">
             {user && (
               <Image
@@ -343,7 +350,7 @@ const DashboardShell = () => {
               data-testid="dashboard-logout"
               onClick={logout}
               type="button"
-              className="text-sm text-ink-secondary hover:text-ink transition-colors duration-fast"
+              className="text-sm text-ink-secondary hover:text-ink transition-colors duration-fast cursor-pointer"
             >
               Logout
             </button>
