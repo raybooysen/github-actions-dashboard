@@ -347,7 +347,7 @@ const DashboardShell = () => {
         />
         <h2 className="sr-only">Repositories</h2>
         {!isLoading && filteredAndSorted.length > 0 && (
-          <div className="flex justify-end -mb-2">
+          <div className="flex justify-end">
             <button
               data-testid="toggle-expand-all"
               onClick={toggleAll}
