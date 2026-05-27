@@ -7,26 +7,26 @@ test.describe('Dashboard with Data', () => {
     await mockGitHubApi(page);
   });
 
-  test('renders summary bar with correct counts', async ({ page }) => {
+  test('renders filter pills with correct per-status counts', async ({ page }) => {
     await page.goto('/dashboard');
 
     await expect(page.getByTestId('dashboard-shell')).toBeVisible();
 
-    const summaryBar = page.getByTestId('summary-bar');
-    await expect(summaryBar).toBeVisible();
+    const repoGrid = page.getByTestId('repo-grid');
+    await expect(repoGrid).toHaveAttribute('aria-busy', 'false');
 
     // With per_page=1 (latest run per repo):
     // api-server latest = MOCK_RUNNING_RUN (in_progress)
     // web-app latest = MOCK_FAILED_RUN (failure)
-    const runningItem = page.getByTestId('summary-running');
-    await expect(runningItem).toContainText('1');
-    await expect(runningItem).toContainText('Running');
+    await expect(page.getByTestId('filter-pill-all-count')).toHaveText('2');
+    await expect(page.getByTestId('filter-pill-running-count')).toHaveText('1');
+    await expect(page.getByTestId('filter-pill-queued-count')).toHaveText('0');
+    await expect(page.getByTestId('filter-pill-failed-count')).toHaveText('1');
 
-    const queuedItem = page.getByTestId('summary-queued');
-    await expect(queuedItem).toContainText('0');
-
-    const failedItem = page.getByTestId('summary-failed');
-    await expect(failedItem).toContainText('1');
+    await expect(page.getByTestId('filter-search')).toHaveAttribute(
+      'placeholder',
+      'Search 2 repositories...',
+    );
   });
 
   test('renders collapsed repo rows', async ({ page }) => {
