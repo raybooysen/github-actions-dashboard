@@ -51,7 +51,6 @@ export const RepoRow = memo(({ repo, latestRun, isExpanded, onToggle, isLoading,
   }
 
   const isActive = latestRun.status === 'in_progress';
-  const isFailed = latestRun.conclusion === 'failure';
   const statusLabel = getStatusLabel(latestRun.status, latestRun.conclusion);
   const statusBorderClass = getStatusBorderClass(latestRun.status, latestRun.conclusion);
   const repoUrl = repo.html_url;
@@ -59,11 +58,8 @@ export const RepoRow = memo(({ repo, latestRun, isExpanded, onToggle, isLoading,
     ? `https://github.com/${latestRun.triggering_actor.login}`
     : null;
 
-  // Conditional border classes: mobile gets color bar, desktop restores existing behavior
-  // Failed rows keep border-l-2 on desktop; non-failed rows remove border on desktop
-  const borderClasses = isFailed
-    ? `border-l-4 ${statusBorderClass} sm:border-l-2 sm:border-status-failure`
-    : `border-l-4 ${statusBorderClass} sm:border-l-0`;
+  // Mobile keeps the status color bar on the left; desktop has none.
+  const borderClasses = `border-l-4 ${statusBorderClass} sm:border-l-0`;
 
   return (
     <div

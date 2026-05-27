@@ -82,12 +82,13 @@ describe('RepoRow', () => {
     expect(screen.getByTestId('repo-row-skeleton')).toBeInTheDocument();
   });
 
-  it('failed repos have red border', () => {
+  it('failed repos keep the mobile status colour bar but drop the desktop left border', () => {
     renderWithProviders(<RepoRow {...defaultProps} latestRun={mockFailed} />);
     const container = screen.getByTestId(`repo-row-${repo.name}`);
     expect(container).toHaveClass('border-l-4');
-    expect(container).toHaveClass('sm:border-l-2');
-    expect(container).toHaveClass('sm:border-status-failure');
+    expect(container).toHaveClass('sm:border-l-0');
+    expect(container).not.toHaveClass('sm:border-l-2');
+    expect(container).not.toHaveClass('sm:border-status-failure');
   });
 
   it('passed repos do not have red border', () => {
