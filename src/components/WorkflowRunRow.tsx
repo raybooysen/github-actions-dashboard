@@ -220,13 +220,15 @@ export const WorkflowRunRow = memo(({ run, owner, repo }: WorkflowRunRowProps) =
             </span>
 
             {/* Workflow name -> links to run on GitHub.
-                min-w-0 lets the flex item shrink below its intrinsic content
-                width so `truncate` actually engages; without it a long run
-                name forces the row past the container and gets clipped by
-                the dashboard-shell's overflow-x-hidden. */}
+                Hard-cap with max-w-[50%] (matching the commit message on the
+                bottom line) so a long run name truncates instead of pushing
+                the trailing duration/time/chevron off the right edge.
+                `min-w-0` alone wasn't enough in practice — competing items in
+                the flex row and the trailing flex-1 spacer left the link able
+                to grow past the visible area. */}
             <GhLink
               href={run.html_url}
-              className="text-sm font-semibold text-ink truncate min-w-0"
+              className="text-sm font-semibold text-ink truncate min-w-0 max-w-[50%]"
               title="View run on GitHub"
             >
               <span data-testid="workflow-run-name">{run.name}</span>
