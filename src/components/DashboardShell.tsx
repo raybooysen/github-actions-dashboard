@@ -344,7 +344,7 @@ const DashboardShell = () => {
         <div
           data-testid="repo-grid"
           aria-busy={isLoading}
-          className="grid gap-3"
+          className="grid grid-cols-1 gap-3"
         >
           {isLoading ? (
             Array.from({ length: 6 }).map((_, i) => (
