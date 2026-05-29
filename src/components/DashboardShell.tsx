@@ -369,18 +369,17 @@ const DashboardShell = () => {
               onStatusChange={setStatusFilter}
             />
           </div>
-          {!isLoading && filteredAndSorted.length > 0 && (
-            <div className="rounded-xl bg-surface border border-edge p-1 flex">
-              <button
-                data-testid="toggle-expand-all"
-                onClick={toggleAll}
-                type="button"
-                className="rounded-lg px-2.5 sm:px-3 py-1 sm:py-1.5 text-sm font-medium text-ink hover:bg-surface-raised active:bg-surface-raised transition-all duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-status-running"
-              >
-                {someCollapsed ? 'Expand all' : 'Collapse all'}
-              </button>
-            </div>
-          )}
+          <div className="rounded-xl bg-surface border border-edge p-1 flex">
+            <button
+              data-testid="toggle-expand-all"
+              onClick={toggleAll}
+              type="button"
+              disabled={isLoading || filteredAndSorted.length === 0}
+              className="rounded-lg px-2.5 sm:px-3 py-1 sm:py-1.5 text-sm font-medium text-ink hover:bg-surface-raised active:bg-surface-raised transition-all duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-status-running disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:active:bg-transparent disabled:active:scale-100"
+            >
+              {someCollapsed ? 'Expand all' : 'Collapse all'}
+            </button>
+          </div>
         </div>
         <h2 className="sr-only">Repositories</h2>
         <div
