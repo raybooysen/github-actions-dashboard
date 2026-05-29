@@ -1,6 +1,6 @@
 // src/lib/status-utils.ts
 
-import type { WorkflowRunStatus, WorkflowRunConclusion } from '@/lib/github-types';
+import type { GitHubWorkflowRun, WorkflowRunStatus, WorkflowRunConclusion } from '@/lib/github-types';
 
 export const QUEUED_STATUSES: ReadonlySet<WorkflowRunStatus> = new Set<WorkflowRunStatus>(['queued', 'waiting', 'pending', 'requested']);
 
@@ -80,4 +80,41 @@ export const getStatusLabel = (
   conclusion: WorkflowRunConclusion,
 ): string => {
   return resolveStatus(status, conclusion).label;
+};
+
+/**
+ * From an array of recent workflow runs (assumed sorted newest-first by
+ * created_at, which is the GitHub API's default), returns the run that should
+ * represent the repo's current state in the dashboard.
+ *
+ * Multiple workflows triggered by the same commit (e.g. CI + Deploy + Lint
+ * after a merge to main) share a `head_sha` but finish at different times.
+ * Surfacing only the literal latest run by `created_at` means a single
+ * slow-passing workflow can mask a concurrent failure or in-progress build.
+ *
+ * Instead, we look at all runs sharing the latest run's `head_sha` — that's
+ * the "concurrent build group" — and pick the one with the worst status, in
+ * priority order: failed > running > queued > anything else. The returned
+ * run drives both the displayed metadata (workflow name, branch, time) and
+ * the status badge, so the row tells the user *which* workflow is failing /
+ * running, not just that something is.
+ */
+const runPriority = (run: GitHubWorkflowRun): number => {
+  if (run.conclusion === 'failure') return 3;
+  if (run.status === 'in_progress') return 2;
+  if (isQueuedStatus(run.status)) return 1;
+  return 0;
+};
+
+export const pickRepresentativeRun = (
+  runs: GitHubWorkflowRun[] | undefined,
+): GitHubWorkflowRun | null => {
+  if (!runs || runs.length === 0) return null;
+
+  const latestSha = runs[0]!.head_sha;
+  const concurrentGroup = runs.filter((r) => r.head_sha === latestSha);
+
+  return concurrentGroup.reduce((worst, current) =>
+    runPriority(current) > runPriority(worst) ? current : worst,
+  );
 };
