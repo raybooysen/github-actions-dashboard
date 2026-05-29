@@ -354,18 +354,38 @@ const DashboardShell = () => {
           data-testid="dashboard-nav"
           className="max-w-5xl mx-auto flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3"
         >
-          <Link
-            href="/dashboard"
-            data-testid="dashboard-title-link"
-            className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-          >
-            <h1
-              data-testid="dashboard-title"
-              className="text-lg font-bold tracking-tight text-ink"
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              href="/dashboard"
+              data-testid="dashboard-title-link"
+              className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
-              Actions Dashboard
-            </h1>
-          </Link>
+              <h1
+                data-testid="dashboard-title"
+                className="text-lg font-bold tracking-tight text-ink"
+              >
+                Actions Dashboard
+              </h1>
+            </Link>
+            {availableOrgs.length > 1 && (
+              <>
+                <span aria-hidden="true" className="text-ink-muted/40 select-none">/</span>
+                <label className="sr-only" htmlFor="org-filter">Filter by organization</label>
+                <select
+                  id="org-filter"
+                  data-testid="org-filter"
+                  value={effectiveOrgFilter}
+                  onChange={(e) => setOrgFilter(e.target.value)}
+                  className="rounded-md px-2 py-1 text-sm font-medium text-ink bg-transparent cursor-pointer transition-colors duration-150 hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-status-running"
+                >
+                  <option value="all">All orgs</option>
+                  {availableOrgs.map((org) => (
+                    <option key={org} value={org}>{org}</option>
+                  ))}
+                </select>
+              </>
+            )}
+          </div>
           <div className="flex items-center gap-3">
             {user && (
               <Image
@@ -400,23 +420,6 @@ const DashboardShell = () => {
               onStatusChange={setStatusFilter}
             />
           </div>
-          {availableOrgs.length > 1 && (
-            <div className="rounded-xl bg-surface border border-edge p-1 flex">
-              <label className="sr-only" htmlFor="org-filter">Filter by organization</label>
-              <select
-                id="org-filter"
-                data-testid="org-filter"
-                value={effectiveOrgFilter}
-                onChange={(e) => setOrgFilter(e.target.value)}
-                className="rounded-lg px-2.5 sm:px-3 py-1 sm:py-1.5 text-sm font-medium text-ink bg-transparent cursor-pointer transition-all duration-150 hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-status-running"
-              >
-                <option value="all">All orgs</option>
-                {availableOrgs.map((org) => (
-                  <option key={org} value={org}>{org}</option>
-                ))}
-              </select>
-            </div>
-          )}
           {!isLoading && filteredAndSorted.length > 0 && (
             <div className="rounded-xl bg-surface border border-edge p-1 flex">
               <button
