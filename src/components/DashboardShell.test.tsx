@@ -326,13 +326,16 @@ describe('DashboardShell integration', () => {
       expect(document.getElementById('repo-expanded-testuser/api-server')).not.toBeInTheDocument();
     });
 
-    it('hides the toggle when no repos are visible', async () => {
+    it('disables the toggle but keeps it visible when no repos are visible', async () => {
       const user = userEvent.setup();
       renderWithProviders(<DashboardShell />);
 
       await waitFor(() => {
         expect(screen.getByTestId('repo-row-api-server')).toBeInTheDocument();
       });
+
+      // Toggle is enabled while repos are visible.
+      expect(screen.getByTestId('toggle-expand-all')).not.toBeDisabled();
 
       // Search for something nothing matches.
       const searchInput = screen.getByRole('searchbox');
@@ -341,7 +344,10 @@ describe('DashboardShell integration', () => {
       await waitFor(() => {
         expect(screen.getByTestId('empty-state')).toBeInTheDocument();
       });
-      expect(screen.queryByTestId('toggle-expand-all')).not.toBeInTheDocument();
+
+      const toggle = screen.getByTestId('toggle-expand-all');
+      expect(toggle).toBeInTheDocument();
+      expect(toggle).toBeDisabled();
     });
   });
 });
