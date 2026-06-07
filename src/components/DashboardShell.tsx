@@ -10,7 +10,7 @@ import { useRepositories } from '@/hooks/useRepositories';
 import { useRateLimit } from '@/contexts/RateLimitContext';
 import { useVisibility } from '@/hooks/useVisibility';
 import { usePinnedRepos } from '@/hooks/usePinnedRepos';
-import { isQueuedStatus } from '@/lib/status-utils';
+import { isQueuedStatus, pickRepresentativeRun } from '@/lib/status-utils';
 import { fetchLatestRun, fetchWorkflowRuns } from '@/lib/github-client';
 import { computeRefetchInterval } from '@/lib/polling';
 import { FilterBar, type StatusCounts } from './FilterBar';
@@ -70,7 +70,7 @@ const RepoItem = ({
     },
   });
 
-  const latestRun = latestRunQuery.data?.workflow_runs?.[0] ?? null;
+  const latestRun = pickRepresentativeRun(latestRunQuery.data?.workflow_runs);
   const totalCount = latestRunQuery.data?.total_count ?? 0;
   const fullRuns = fullRunsQuery.data?.workflow_runs ?? [];
 
@@ -188,7 +188,7 @@ const DashboardShell = () => {
     const map = new Map<string, GitHubWorkflowRun | null>();
     visibleRepos.forEach((repo, i) => {
       const data = latestRunQueries[i]?.data;
-      const run = data?.workflow_runs?.[0] ?? null;
+      const run = pickRepresentativeRun(data?.workflow_runs);
       map.set(repo.full_name, run);
     });
     return map;

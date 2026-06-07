@@ -168,13 +168,20 @@ export const fetchWorkflowRuns = (
   );
 };
 
+// Per-repo "latest activity" probe. Returns the most recent N runs (not just
+// the literal latest) so the caller can group runs by head_sha and surface
+// the worst-status workflow for the current commit — see pickRepresentativeRun
+// in status-utils.ts. 20 covers any realistic fan-out of workflows triggered
+// by a single push/merge.
+export const RECENT_RUNS_PER_PAGE = 20;
+
 export const fetchLatestRun = (
   token: string,
   owner: string,
   repo: string,
 ): Promise<GitHubWorkflowRunsResponse> => {
   return githubFetch(
-    `/repos/${owner}/${repo}/actions/runs?per_page=1`,
+    `/repos/${owner}/${repo}/actions/runs?per_page=${RECENT_RUNS_PER_PAGE}`,
     token,
   );
 };
