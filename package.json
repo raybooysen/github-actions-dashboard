@@ -36,7 +36,7 @@
     "msw": "^2.14.6",
     "tailwindcss": "^4",
     "typescript": "^6",
-    "vitest": "^4.1.7",
+    "vitest": "^4.1.8",
     "@remotion/cli": "^4.0.467",
     "@remotion/renderer": "^4.0.451",
     "remotion": "^4.0.467"
