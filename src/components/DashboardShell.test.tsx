@@ -350,4 +350,83 @@ describe('DashboardShell integration', () => {
       expect(toggle).toBeDisabled();
     });
   });
+
+  describe('org filter dropdown', () => {
+    const setupMultiOrg = () => {
+      const acmeRepo: GitHubRepo = {
+        id: 10, name: 'invoicing', full_name: 'acme/invoicing',
+        owner: { login: 'acme' }, private: false, archived: false,
+        pushed_at: '2026-04-18T07:00:00Z', html_url: 'https://github.com/acme/invoicing',
+      };
+      server.use(
+        http.get('https://api.github.com/user/repos', () => {
+          return HttpResponse.json([...testRepos, acmeRepo]);
+        }),
+        http.get('https://api.github.com/repos/acme/invoicing/actions/runs', () => {
+          // Reuse api-server's run shape but with passing status, just to populate the row.
+          return HttpResponse.json({
+            total_count: 1,
+            workflow_runs: [{
+              ...apiServerRuns.workflow_runs[0]!,
+              id: 999,
+              conclusion: 'success',
+              status: 'completed',
+            }],
+          });
+        }),
+      );
+    };
+
+    it('hides the dropdown when all visible repos share a single owner', async () => {
+      renderWithProviders(<DashboardShell />);
+      await waitFor(() => {
+        expect(screen.getByTestId('repo-row-api-server')).toBeInTheDocument();
+      });
+      expect(screen.queryByTestId('org-filter')).not.toBeInTheDocument();
+    });
+
+    it('renders the dropdown with All orgs + each owner.login when more than one org is present', async () => {
+      setupMultiOrg();
+      renderWithProviders(<DashboardShell />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('repo-row-api-server')).toBeInTheDocument();
+        expect(screen.getByTestId('repo-row-invoicing')).toBeInTheDocument();
+      });
+
+      const dropdown = screen.getByTestId('org-filter') as HTMLSelectElement;
+      expect(dropdown).toBeInTheDocument();
+      const optionValues = Array.from(dropdown.options).map((o) => o.value);
+      expect(optionValues).toEqual(['all', 'acme', 'testuser']);
+    });
+
+    it('filters the visible repos and updates the placeholder + pill counts when an org is selected', async () => {
+      setupMultiOrg();
+      const user = userEvent.setup();
+      renderWithProviders(<DashboardShell />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('repo-row-api-server')).toBeInTheDocument();
+        expect(screen.getByTestId('repo-row-invoicing')).toBeInTheDocument();
+      });
+
+      // Total across both orgs = 4 (testuser × 3 + acme × 1).
+      expect(screen.getByTestId('filter-search')).toHaveAttribute('placeholder', 'Search 4 repositories...');
+      expect(screen.getByTestId('filter-pill-all-count')).toHaveTextContent('4');
+
+      await user.selectOptions(screen.getByTestId('org-filter'), 'acme');
+
+      // After narrowing to acme: only the invoicing repo, all other testuser ones gone.
+      await waitFor(() => {
+        expect(screen.queryByTestId('repo-row-api-server')).not.toBeInTheDocument();
+      });
+      expect(screen.getByTestId('repo-row-invoicing')).toBeInTheDocument();
+
+      // Search placeholder + counts now reflect just the acme scope.
+      expect(screen.getByTestId('filter-search')).toHaveAttribute('placeholder', 'Search 1 repository...');
+      expect(screen.getByTestId('filter-pill-all-count')).toHaveTextContent('1');
+      expect(screen.getByTestId('filter-pill-passed-count')).toHaveTextContent('1');
+      expect(screen.getByTestId('filter-pill-failed-count')).toHaveTextContent('0');
+    });
+  });
 });

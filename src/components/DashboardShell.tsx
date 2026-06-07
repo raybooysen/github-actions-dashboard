@@ -129,6 +129,7 @@ const RepoItem = ({
 const DashboardShell = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [orgFilter, setOrgFilter] = useState<string>('all');
   // Track user-initiated toggles as a map of repo full name → expanded/collapsed.
   // Failed repos auto-expand via derived state below.
   const [userToggles, setUserToggles] = useState<Map<string, boolean>>(new Map());
@@ -144,6 +145,35 @@ const DashboardShell = () => {
   // The count is surfaced at the bottom of the list so it's not silently dropped.
   const visibleRepos = useMemo(() => (repos ?? []).filter((repo) => !repo.archived), [repos]);
   const archivedCount = useMemo(() => (repos ?? []).filter((repo) => repo.archived).length, [repos]);
+
+  // Distinct owner.login values across visible repos, sorted for stable dropdown order.
+  // Polling stays scoped to all visible repos so switching org doesn't refetch.
+  const availableOrgs = useMemo(() => {
+    const orgs = new Set<string>();
+    for (const repo of visibleRepos) {
+      orgs.add(repo.owner.login);
+    }
+    return Array.from(orgs).sort((a, b) => a.localeCompare(b));
+  }, [visibleRepos]);
+
+  // Derive (don't setState in effect) so that if the saved orgFilter no longer
+  // exists in availableOrgs (e.g. user logged out and back in as a different
+  // identity), the filter falls back to 'all' without getting stuck. The actual
+  // orgFilter state is kept intact in case the repos refetch and the org
+  // reappears.
+  const effectiveOrgFilter =
+    orgFilter === 'all' || !availableOrgs.includes(orgFilter) ? 'all' : orgFilter;
+
+  // Org scope is applied *before* search/status. Status counts and the total
+  // in the search placeholder reflect the selected org's universe; the search
+  // and status pills then narrow further within it.
+  const orgScopedRepos = useMemo(
+    () =>
+      effectiveOrgFilter === 'all'
+        ? visibleRepos
+        : visibleRepos.filter((r) => r.owner.login === effectiveOrgFilter),
+    [visibleRepos, effectiveOrgFilter],
+  );
 
   const latestRunQueries = useQueries({
     queries: visibleRepos.map((repo) => ({
@@ -175,16 +205,17 @@ const DashboardShell = () => {
 
   const allLatestRuns = useMemo<GitHubWorkflowRun[]>(() => {
     const runs: GitHubWorkflowRun[] = [];
-    for (const run of latestRunByRepo.values()) {
+    for (const repo of orgScopedRepos) {
+      const run = latestRunByRepo.get(repo.full_name);
       if (run) runs.push(run);
     }
     return runs;
-  }, [latestRunByRepo]);
+  }, [orgScopedRepos, latestRunByRepo]);
 
   const filteredAndSorted = useMemo(() => {
     if (!repos) return [];
 
-    const filtered = visibleRepos.filter((repo) => {
+    const filtered = orgScopedRepos.filter((repo) => {
       const latestRun = latestRunByRepo.get(repo.full_name);
 
       if (!latestRun) return false;
@@ -224,7 +255,7 @@ const DashboardShell = () => {
       const bTime = bRun?.created_at ?? b.pushed_at;
       return new Date(bTime).getTime() - new Date(aTime).getTime();
     });
-  }, [repos, visibleRepos, searchQuery, statusFilter, latestRunByRepo, isPinned]);
+  }, [repos, orgScopedRepos, searchQuery, statusFilter, latestRunByRepo, isPinned]);
 
   // Derive expanded repos: failed repos auto-expand, user toggles override
   const expandedRepos = useMemo(() => {
@@ -298,7 +329,7 @@ const DashboardShell = () => {
   }, [allLatestRuns]);
 
   const totalRepos = allLatestRuns.length;
-  const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all';
+  const hasActiveFilters = searchQuery !== '' || statusFilter !== 'all' || effectiveOrgFilter !== 'all';
 
   // Show skeletons until repos AND their latest-run queries have settled.
   // This prevents a flash of "No repositories" while runs are still loading.
@@ -323,18 +354,38 @@ const DashboardShell = () => {
           data-testid="dashboard-nav"
           className="max-w-5xl mx-auto flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3"
         >
-          <Link
-            href="/dashboard"
-            data-testid="dashboard-title-link"
-            className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-          >
-            <h1
-              data-testid="dashboard-title"
-              className="text-lg font-bold tracking-tight text-ink"
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              href="/dashboard"
+              data-testid="dashboard-title-link"
+              className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
-              Actions Dashboard
-            </h1>
-          </Link>
+              <h1
+                data-testid="dashboard-title"
+                className="text-lg font-bold tracking-tight text-ink"
+              >
+                Actions Dashboard
+              </h1>
+            </Link>
+            {availableOrgs.length > 1 && (
+              <>
+                <span aria-hidden="true" className="text-ink-muted/40 select-none">/</span>
+                <label className="sr-only" htmlFor="org-filter">Filter by organization</label>
+                <select
+                  id="org-filter"
+                  data-testid="org-filter"
+                  value={effectiveOrgFilter}
+                  onChange={(e) => setOrgFilter(e.target.value)}
+                  className="rounded-md px-2 py-1 text-sm font-medium text-ink bg-transparent cursor-pointer transition-colors duration-150 hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-status-running"
+                >
+                  <option value="all">All orgs</option>
+                  {availableOrgs.map((org) => (
+                    <option key={org} value={org}>{org}</option>
+                  ))}
+                </select>
+              </>
+            )}
+          </div>
           <div className="flex items-center gap-3">
             {user && (
               <Image
