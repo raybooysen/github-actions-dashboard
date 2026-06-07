@@ -96,14 +96,12 @@ describe('isQueuedStatus', () => {
 
 describe('pickRepresentativeRun', () => {
   const makeRun = (overrides: Partial<GitHubWorkflowRun> & { id: number; head_sha: string }): GitHubWorkflowRun => ({
-    id: overrides.id,
     workflow_id: 1,
     name: `workflow-${overrides.id}`,
     display_title: 'commit',
     status: 'completed',
     conclusion: 'success',
     head_branch: 'main',
-    head_sha: overrides.head_sha,
     event: 'push',
     created_at: '2026-04-18T10:00:00Z',
     updated_at: '2026-04-18T10:01:00Z',
