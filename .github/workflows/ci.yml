@@ -18,7 +18,7 @@ jobs:
       NEXT_PUBLIC_GITHUB_CLIENT_ID: e2e-test-client-id
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v6
         with:
