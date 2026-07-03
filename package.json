@@ -37,7 +37,7 @@
     "tailwindcss": "^4",
     "typescript": "^6",
     "vitest": "^4.1.8",
-    "@remotion/cli": "^4.0.483",
+    "@remotion/cli": "^4.0.484",
     "@remotion/renderer": "^4.0.451",
     "remotion": "^4.0.481"
   }
