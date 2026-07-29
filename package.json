@@ -20,9 +20,9 @@
     "react-dom": "19.2.7"
   },
   "devDependencies": {
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "^1.62.0",
     "@tailwindcss/postcss": "^4",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^24",
@@ -33,10 +33,10 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "jsdom": "^29.1.1",
-    "msw": "^2.14.6",
+    "msw": "^2.15.0",
     "tailwindcss": "^4",
     "typescript": "^6",
-    "vitest": "^4.1.8",
+    "vitest": "^4.1.10",
     "@remotion/cli": "^4.0.484",
     "@remotion/renderer": "^4.0.451",
     "remotion": "^4.0.481"
