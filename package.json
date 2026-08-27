@@ -39,6 +39,6 @@
     "vitest": "^4.1.10",
     "@remotion/cli": "^4.0.484",
     "@remotion/renderer": "^4.0.515",
-    "remotion": "^4.0.481"
+    "remotion": "^4.0.516"
   }
 }
