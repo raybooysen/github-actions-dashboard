@@ -257,3 +257,65 @@ test.describe('Desktop Layout (1280px)', () => {
     await expect(runBranch).toBeVisible();
   });
 });
+
+// The landing page must fit in a single viewport on laptop-sized screens --
+// no vertical scrolling. Heights below are real MacBook viewports measured
+// after browser chrome (tab strip + bookmarks bar) is subtracted.
+const LAPTOP_VIEWPORTS = [
+  { width: 1470, height: 780, label: '13" MacBook Air' },
+  { width: 1512, height: 800, label: '14" MacBook Pro' },
+  { width: 1728, height: 900, label: '16" MacBook Pro' },
+];
+
+test.describe('Landing page fits the viewport', () => {
+  for (const viewport of LAPTOP_VIEWPORTS) {
+    test.describe(`on a ${viewport.label}`, () => {
+      test.use({
+        viewport: { width: viewport.width, height: viewport.height },
+      });
+
+      test('has no vertical overflow', async ({ page }) => {
+        await page.goto('/');
+
+        await expect(page.getByTestId('landing-title')).toBeVisible();
+
+        // The landing shell is h-screen with an internally scrolling <main>,
+        // so overflow hides inside main rather than on the document.
+        const overflow = await page
+          .getByTestId('landing-page')
+          .evaluate((el) => ({
+            main: el.scrollHeight - el.clientHeight,
+            document:
+              document.documentElement.scrollHeight - window.innerHeight,
+          }));
+
+        expect(overflow.main).toBeLessThanOrEqual(0);
+        expect(overflow.document).toBeLessThanOrEqual(0);
+      });
+
+      test('the scope disclosure is inside the viewport', async ({ page }) => {
+        await page.goto('/');
+
+        const disclosure = page.getByTestId('landing-scope-disclosure');
+        await expect(disclosure).toBeInViewport();
+      });
+
+      // The session-expired alert is the tallest the page ever gets.
+      test('has no vertical overflow with the session-expired alert', async ({
+        page,
+      }) => {
+        await page.goto('/?reason=session_expired');
+
+        await expect(
+          page.getByTestId('session-expired-message'),
+        ).toBeVisible();
+
+        const overflow = await page
+          .getByTestId('landing-page')
+          .evaluate((el) => el.scrollHeight - el.clientHeight);
+
+        expect(overflow).toBeLessThanOrEqual(0);
+      });
+    });
+  }
+});

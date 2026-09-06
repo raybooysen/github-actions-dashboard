@@ -9,7 +9,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./test/setup.tsx'],
     css: true,
-    exclude: ['e2e/**', 'node_modules/**', '.worktrees/**', 'worktrees/**', '.fleet/**'],
+    exclude: ['e2e/**', 'node_modules/**', '.worktrees/**', 'worktrees/**', '.claude/**', '.fleet/**'],
   },
   resolve: {
     alias: {

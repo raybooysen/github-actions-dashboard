@@ -61,26 +61,22 @@ const FEATURES = [
   {
     icon: PaneIcon,
     title: 'Unified dashboard',
-    description:
-      'All your repositories and workflow runs in a single view. No more tab switching.',
+    description: 'Every repo and workflow run in a single view.',
   },
   {
     icon: PollIcon,
     title: 'Smart polling',
-    description:
-      'Refresh intervals adapt to activity — active runs poll faster, idle repos poll less.',
+    description: 'Active runs refresh faster, idle repos poll less.',
   },
   {
     icon: ShieldIcon,
     title: 'Privacy first',
-    description:
-      'Your GitHub token never leaves your browser. No server-side storage, no data collection.',
+    description: 'No server-side storage, no data collection.',
   },
   {
     icon: BoltIcon,
     title: 'Live status updates',
-    description:
-      'Watch workflow runs go from queued to running to complete in real time.',
+    description: 'Watch runs go from queued to complete in real time.',
   },
 ];
 
@@ -130,9 +126,9 @@ const LandingPageContent = () => {
     <div className="flex h-screen flex-col bg-canvas overflow-hidden">
     <main
       data-testid="landing-page"
-      className="flex-1 overflow-y-auto"
+      className="flex-1 overflow-y-auto flex flex-col"
     >
-      <div className="mx-auto max-w-7xl px-6 py-6 md:py-10 lg:py-14">
+      <div className="m-auto w-full max-w-7xl px-6 py-6 md:py-8 lg:py-10">
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-12 items-center">
           {/* Left column -- text content */}
           <div>
@@ -148,11 +144,9 @@ const LandingPageContent = () => {
             </p>
 
             <p className="mt-5 text-base text-ink-secondary leading-relaxed max-w-[55ch]">
-              GitHub Actions spreads workflow runs across dozens of
-              repositories. Checking deployment status means juggling browser
-              tabs and clicking through repo after repo. This dashboard gives
-              you a single, real-time view of every workflow run — so you
-              always know what&apos;s passing, failing, or still in progress.
+              GitHub Actions scatters workflow runs across dozens of
+              repositories. This dashboard pulls every one of them into a
+              single, real-time view.
             </p>
 
             {sessionExpired && (
@@ -168,25 +162,8 @@ const LandingPageContent = () => {
               </div>
             )}
 
-            {/* Feature list — clean, no cards */}
-            <div className="mt-10 space-y-3">
-              {FEATURES.map((f, i) => (
-                <div
-                  key={f.title}
-                  className="flex items-center gap-3 animate-fade-in-up"
-                  style={{ animationDelay: `${(i + 1) * 100}ms` }}
-                >
-                  <f.icon />
-                  <p className="text-sm text-ink">
-                    <span className="font-semibold">{f.title}</span>
-                    <span className="text-ink-secondary"> &mdash; {f.description}</span>
-                  </p>
-                </div>
-              ))}
-            </div>
-
             {/* CTA area */}
-            <div className="mt-10">
+            <div className="mt-8">
               <button
                 data-testid="landing-connect-button"
                 onClick={login}
@@ -196,29 +173,45 @@ const LandingPageContent = () => {
                 Connect with GitHub
               </button>
 
-              <div className="mt-5 flex items-center gap-2">
-                <ShieldIcon className="h-4 w-4 text-ink-muted shrink-0" />
-                <p className="text-sm text-ink-secondary">
-                  Your GitHub token stays in your browser. We never store
-                  data on our servers or access your source code.
+              <div className="mt-4 flex items-start gap-2">
+                <ShieldIcon className="h-4 w-4 mt-0.5 text-ink-muted shrink-0" />
+                <p
+                  data-testid="landing-scope-disclosure"
+                  className="text-sm text-ink-secondary max-w-[52ch]"
+                >
+                  Your token stays in your browser — never stored on our
+                  servers. Requires the{' '}
+                  <code className="font-mono text-xs">repo</code> scope to read
+                  private repositories.
                 </p>
               </div>
             </div>
-
-            <p
-              data-testid="landing-scope-disclosure"
-              className="mt-6 text-xs text-ink-muted"
-            >
-              Requires the{' '}
-              <code className="font-mono text-xs">repo</code> scope to read
-              workflow runs from private repositories.
-            </p>
           </div>
 
           {/* Right column -- dashboard preview */}
           <div>
             <DashboardPreview />
           </div>
+        </div>
+
+        {/* Feature strip -- spans both columns so the hero stays short enough
+            to fit a laptop viewport without scrolling. */}
+        <div className="mt-8 border-t border-edge pt-6 grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-6">
+          {FEATURES.map((f, i) => (
+            <div
+              key={f.title}
+              className="animate-fade-in-up"
+              style={{ animationDelay: `${(i + 1) * 100}ms` }}
+            >
+              <div className="flex items-center gap-2">
+                <f.icon />
+                <p className="text-sm font-semibold text-ink">{f.title}</p>
+              </div>
+              <p className="mt-1 text-sm text-ink-secondary">
+                {f.description}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </main>
